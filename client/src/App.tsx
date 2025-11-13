@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import socket from "./config/socket.config";
 import type { PlaybackState } from "./types/socket";
-import type { YouTubeEvent, YouTubeProps } from "react-youtube";
+import type { YouTubeEvent, YouTubePlayer, YouTubeProps } from "react-youtube";
 import { parseYouTubeId } from "./utils/youtube";
 import YouTube from "react-youtube";
 
 const App = () => {
   const [videoId, setVideoId] = useState<string | null>("");
   const [url, setUrl] = useState<string>("");
-  const [connectedCount, setConnectedCount] = useState<number>(0);
+  // const [connectedCount, setConnectedCount] = useState<number>(0);
 
-  const playerRef = useRef<YT.Player | null>(null);
+  const playerRef = useRef<YouTubePlayer | null>(null);
   const applyingRemoteRef = useRef(false);
 
   useEffect(() => {
@@ -32,7 +32,10 @@ const App = () => {
       setTimeout(() => (applyingRemoteRef.current = false), 100);
     });
 
-    socket.on("play", ({ position }) => {
+    socket.on("play", (data) => {
+      console.log("[CLIENT] play received:", data);
+
+      const { position } = data;
       if (!playerRef.current) return;
       applyingRemoteRef.current = true;
       playerRef.current.seekTo(position, true);
@@ -40,7 +43,10 @@ const App = () => {
       setTimeout(() => (applyingRemoteRef.current = false), 100);
     });
 
-    socket.on("pause", ({ position }) => {
+    socket.on("pause", (data) => {
+      console.log("[CLIENT] pause received:", data);
+      
+      const { position } = data;
       if (!playerRef.current) return;
       applyingRemoteRef.current = true;
       
@@ -49,7 +55,10 @@ const App = () => {
       setTimeout(() => (applyingRemoteRef.current = false), 100);
     });
 
-    socket.on("seek", ({ position }) => {
+    socket.on("seek", (data) => {
+      console.log("[CLIENT] seek received:", data);
+      
+      const { position } = data;
       if (!playerRef.current) return;
       applyingRemoteRef.current = true;
 
@@ -57,7 +66,10 @@ const App = () => {
       setTimeout(() => (applyingRemoteRef.current = false), 100);
     });
 
-    socket.on("changeVideo", ({ videoId }) => {
+    socket.on("changeVideo", (data) => {
+      console.log("[CLIENT] play received:", data);
+      
+      const { videoId } = data;
       setVideoId(videoId);
     });
 
@@ -74,33 +86,39 @@ const App = () => {
   }, [])
 
   const opts: YouTubeProps["opts"] = {
-    playerVars: { autoplay: 0 }
+    height: "390",
+    width: "640",
+    playerVars: { 
+      autoplay: 0,
+      color: "red",
+      controls: 1,
+    }
   };
 
   const onReady = (e: YouTubeEvent<any>) => {
-    playerRef.current = e.target;
+    playerRef.current = e.target as YouTubePlayer;
     
     socket.emit("requestSync");
   };
 
   const getCurrent = () => playerRef.current?.getCurrentTime() ?? 0;
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     if (applyingRemoteRef.current) return;
-    socket.emit("play", { position: getCurrent() });
+    socket.emit("play", { position: await getCurrent() });
   };
 
-  const handlePause = () => {
+  const handlePause = async () => {
     if (applyingRemoteRef.current) return;
-    socket.emit("pause", { position: getCurrent() });
+    socket.emit("pause", { position: await getCurrent() });
   };
 
   // Fired for many state changes; we only care about SEEK
-  const onStateChange = (e: YouTubeEvent<number>) => {
+  const onStateChange = async (e: YouTubeEvent<number>) => {
     if (applyingRemoteRef.current) return;
     // Player state 1 = playing, 2 = paused, 3 = buffering, etc.
     // We’ll treat manual scrubs as "seek" by comparing onMouseUp handlers or using this simple emit:
-    const position = getCurrent();
+    const position = await getCurrent();
     // Emit a seek on buffering (3) or unclassified changes; harmless if not actually a seek
     if (e.data === 3) {
       socket.emit("seek", { position });
@@ -148,9 +166,9 @@ const App = () => {
         <button onClick={handlePlay}>Play</button>
         <button onClick={handlePause}>Pause</button>
         <button
-          onClick={() => {
+          onClick={async () => {
             if (!playerRef.current) return;
-            const pos = Math.max(0, getCurrent() - 10);
+            const pos = Math.max(0, await getCurrent() - 10);
             playerRef.current.seekTo(pos, true);
             if (!applyingRemoteRef.current) socket.emit("seek", { position: pos });
           }}
@@ -158,9 +176,9 @@ const App = () => {
           -10s
         </button>
         <button
-          onClick={() => {
+          onClick={async () => {
             if (!playerRef.current) return;
-            const pos = getCurrent() + 10;
+            const pos = await getCurrent() + 10;
             playerRef.current.seekTo(pos, true);
             if (!applyingRemoteRef.current) socket.emit("seek", { position: pos });
           }}

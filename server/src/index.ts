@@ -16,7 +16,8 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
 	cors: {
-		origin: "*"
+		origin: "http://localhost:5173",
+		methods: ["GET", "POST"]
 	},
 });
 
@@ -48,13 +49,14 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("play", ({ position }) => {
+		console.log("Play")
 		state = {
 			...state,
 			isPlaying: true,
 			position,
 			updatedAt: Date.now()
 		};
-		socket.broadcast.emit("play", { position });
+		io.emit("play", { position });
 	});
 
 	socket.on("pause", ({ position }) => {
@@ -64,7 +66,7 @@ io.on("connection", (socket) => {
 			position,
 			updatedAt: Date.now()
 		};
-		socket.broadcast.emit("pause", { position });
+		io.emit("pause", { position });
 	});
 
 	socket.on("seek", ({ position }) => {
@@ -73,7 +75,7 @@ io.on("connection", (socket) => {
 			position,
 			updatedAt: Date.now()
 		};
-		socket.broadcast.emit("seek", { position });
+		io.emit("seek", { position });
 	});
 
 	socket.on("changeVideo", ({ videoId }) => {

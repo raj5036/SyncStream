@@ -21,6 +21,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/youtube": "^0.1.2",
+    "@types/youtube-player": "^5.5.11",
     "@vitejs/plugin-react": "^5.1.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^5.2.0",
