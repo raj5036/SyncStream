@@ -69,7 +69,7 @@ io.on("connection", (socket) => {
 		io.emit("pause", { position });
 	});
 
-	socket.on("seek", ({ position }) => {
+	socket.on("seek", ({ position }) => { 
 		state = {
 			...state,
 			position,

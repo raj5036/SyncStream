@@ -4,6 +4,8 @@ import type { PlaybackState } from "./types/socket";
 import type { YouTubeEvent, YouTubePlayer, YouTubeProps } from "react-youtube";
 import { parseYouTubeId } from "./utils/youtube";
 import YouTube from "react-youtube";
+import { Bounce, ToastContainer, toast } from "react-toastify";
+import "./App.css";
 
 const App = () => {
   const [videoId, setVideoId] = useState<string | null>("");
@@ -45,11 +47,11 @@ const App = () => {
 
     socket.on("pause", (data) => {
       console.log("[CLIENT] pause received:", data);
-      
+
       const { position } = data;
       if (!playerRef.current) return;
       applyingRemoteRef.current = true;
-      
+
       playerRef.current.seekTo(position, true);
       playerRef.current?.pauseVideo();
       setTimeout(() => (applyingRemoteRef.current = false), 100);
@@ -57,7 +59,7 @@ const App = () => {
 
     socket.on("seek", (data) => {
       console.log("[CLIENT] seek received:", data);
-      
+
       const { position } = data;
       if (!playerRef.current) return;
       applyingRemoteRef.current = true;
@@ -68,7 +70,7 @@ const App = () => {
 
     socket.on("changeVideo", (data) => {
       console.log("[CLIENT] play received:", data);
-      
+
       const { videoId } = data;
       setVideoId(videoId);
     });
@@ -88,7 +90,7 @@ const App = () => {
   const opts: YouTubeProps["opts"] = {
     height: "390",
     width: "640",
-    playerVars: { 
+    playerVars: {
       autoplay: 0,
       color: "red",
       controls: 1,
@@ -97,18 +99,26 @@ const App = () => {
 
   const onReady = (e: YouTubeEvent<any>) => {
     playerRef.current = e.target as YouTubePlayer;
-    
+
     socket.emit("requestSync");
   };
 
   const getCurrent = () => playerRef.current?.getCurrentTime() ?? 0;
 
   const handlePlay = async () => {
+    if (!url || !videoId) {
+      toast.error("Please add a video url first");
+    }
+
     if (applyingRemoteRef.current) return;
     socket.emit("play", { position: await getCurrent() });
   };
 
   const handlePause = async () => {
+    if (!url || !videoId) {
+      toast.error("Please add a video url first");
+    }
+
     if (applyingRemoteRef.current) return;
     socket.emit("pause", { position: await getCurrent() });
   };
@@ -128,64 +138,74 @@ const App = () => {
   const changeVideo = () => {
     const id = parseYouTubeId(url);
     if (!id) {
-      alert("Please enter a valid YouTube URL or 11-char video ID");
+      toast.error("Please enter a valid YouTube URL or 11-char video ID");
       return;
     }
     socket.emit("changeVideo", { videoId: id });
     setUrl("");
   };
 
-  return (
-    <div style={{ maxWidth: 880, margin: "32px auto", padding: 16 }}>
-      <h2>Watch Party (Global Session)</h2>
+  const seekBy = async (sec: number) => {
+    if (!url || !videoId) {
+      toast.error("Please add a video url first");
+    }
+    
+    if (!playerRef.current) return;
+    const current = await getCurrent();
+    const pos = Math.max(0, current + sec);
+    playerRef.current.seekTo(pos, true);
+    if (!applyingRemoteRef.current) socket.emit("seek", { position: pos });
+  };
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+  return (
+    <div className="app-container">
+      <h1 className="title">Watch Party<span className="highlight"> • Global Session</span></h1>
+
+      <div className="input-group">
         <input
+          className="input"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Paste YouTube URL or ID"
-          style={{ flex: 1, padding: 8 }}
         />
-        <button onClick={changeVideo}>Load</button>
+        <button className="load-btn" onClick={changeVideo}>Load</button>
       </div>
 
-      {videoId ? (
-        <YouTube
-          videoId={videoId}
-          opts={opts}
-          onReady={onReady}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onStateChange={onStateChange}
-        />
-      ) : (
-        <p>Load a video to begin.</p>
-      )}
-
-      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-        <button onClick={handlePlay}>Play</button>
-        <button onClick={handlePause}>Pause</button>
-        <button
-          onClick={async () => {
-            if (!playerRef.current) return;
-            const pos = Math.max(0, await getCurrent() - 10);
-            playerRef.current.seekTo(pos, true);
-            if (!applyingRemoteRef.current) socket.emit("seek", { position: pos });
-          }}
-        >
-          -10s
-        </button>
-        <button
-          onClick={async () => {
-            if (!playerRef.current) return;
-            const pos = await getCurrent() + 10;
-            playerRef.current.seekTo(pos, true);
-            if (!applyingRemoteRef.current) socket.emit("seek", { position: pos });
-          }}
-        >
-          +10s
-        </button>
+      <div className="player-wrapper">
+        {videoId ? (
+          <YouTube
+            videoId={videoId}
+            opts={opts}
+            onReady={onReady}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onStateChange={onStateChange}
+            className="player"
+          />
+        ) : (
+          <p className="placeholder">Load a video to begin 🎬</p>
+        )}
       </div>
+
+      <div className="controls">
+        <button onClick={handlePlay}>▶ Play</button>
+        <button onClick={handlePause}>⏸ Pause</button>
+        <button onClick={() => seekBy(-10)}>⏪ -10s</button>
+        <button onClick={() => seekBy(10)}>⏩ +10s</button>
+      </div>
+      <ToastContainer
+          position="bottom-left"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick={false}
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          transition={Bounce}
+      />
     </div>
   )
 };

@@ -1,42 +1,100 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.app-container {
+	max-width: 900px;
+	margin: 40px auto;
+	padding: 20px;
+	font-family: "Inter", sans-serif;
+	color: #222;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.title {
+	font-size: 2rem;
+	font-weight: 700;
+	text-align: center;
+	margin-bottom: 24px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.highlight {
+	color: #666;
+	font-weight: 400;
+	font-size: 1.2rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.input-group {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 20px;
 }
 
-.card {
-  padding: 2em;
+.input {
+	flex: 1;
+	padding: 12px 16px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	font-size: 1rem;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.read-the-docs {
-  color: #888;
+.load-btn {
+	padding: 12px 20px;
+	border-radius: 10px;
+	border: none;
+	background: #007aff;
+	color: white;
+	font-weight: 600;
+	cursor: pointer;
+	transition: 0.2s ease;
+}
+
+.load-btn:hover {
+	background: #005bbb;
+}
+
+.player-wrapper {
+	margin: 30px 0;
+	display: flex;
+	justify-content: center;
+}
+
+.player iframe {
+	border-radius: 14px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.placeholder {
+	text-align: center;
+	color: #888;
+	font-size: 1.1rem;
+	padding: 40px 0;
+}
+
+.controls {
+	display: flex;
+	justify-content: center;
+	gap: 15px;
+	margin-top: 10px;
+}
+
+.controls button {
+	padding: 10px 18px;
+	border-radius: 10px;
+	font-size: 0.95rem;
+	border: none;
+	cursor: pointer;
+	background: #f1f1f1;
+	transition: 0.2s;
+}
+
+.controls button:hover {
+	background: #e5e5e5;
+}
+
+@media (max-width: 600px) {
+	.input-group {
+		flex-direction: column;
+	}
+
+	.controls {
+		flex-direction: column;
+		gap: 10px;
+	}
 }
