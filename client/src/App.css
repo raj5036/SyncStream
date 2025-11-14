@@ -88,6 +88,11 @@
 	background: #e5e5e5;
 }
 
+.controls button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 @media (max-width: 600px) {
 	.input-group {
 		flex-direction: column;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import socket from "./config/socket.config";
 import type { PlaybackState } from "./types/socket";
 import type { YouTubeEvent, YouTubePlayer, YouTubeProps } from "react-youtube";
-import { parseYouTubeId } from "./utils/youtube";
+import { isValidVideoId, parseYouTubeId } from "./utils/youtube";
 import YouTube from "react-youtube";
 import { Bounce, ToastContainer, toast } from "react-toastify";
 import "./App.css";
@@ -10,7 +10,7 @@ import "./App.css";
 const App = () => {
   const [videoId, setVideoId] = useState<string | null>("");
   const [url, setUrl] = useState<string>("");
-  // const [connectedCount, setConnectedCount] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   const playerRef = useRef<YouTubePlayer | null>(null);
   const applyingRemoteRef = useRef(false);
@@ -28,6 +28,8 @@ const App = () => {
         } else {
           playerRef.current.pauseVideo();
         }
+
+        setIsPlaying(s.isPlaying);
       }
 
       // Small timeout lets YouTube settle before we allow local emits again
@@ -36,6 +38,7 @@ const App = () => {
 
     socket.on("play", (data) => {
       console.log("[CLIENT] play received:", data);
+      setIsPlaying(true);
 
       const { position } = data;
       if (!playerRef.current) return;
@@ -47,6 +50,7 @@ const App = () => {
 
     socket.on("pause", (data) => {
       console.log("[CLIENT] pause received:", data);
+      setIsPlaying(false);
 
       const { position } = data;
       if (!playerRef.current) return;
@@ -69,7 +73,7 @@ const App = () => {
     });
 
     socket.on("changeVideo", (data) => {
-      console.log("[CLIENT] play received:", data);
+      console.log("[CLIENT] changeVideo received:", data);
 
       const { videoId } = data;
       setVideoId(videoId);
@@ -91,7 +95,7 @@ const App = () => {
     height: "390",
     width: "640",
     playerVars: {
-      autoplay: 0,
+      autoplay: 1,
       color: "red",
       controls: 1,
     }
@@ -106,7 +110,7 @@ const App = () => {
   const getCurrent = () => playerRef.current?.getCurrentTime() ?? 0;
 
   const handlePlay = async () => {
-    if (!url || !videoId) {
+    if (!videoId) {
       toast.error("Please add a video url first");
     }
 
@@ -115,7 +119,7 @@ const App = () => {
   };
 
   const handlePause = async () => {
-    if (!url || !videoId) {
+    if (!videoId) {
       toast.error("Please add a video url first");
     }
 
@@ -123,13 +127,9 @@ const App = () => {
     socket.emit("pause", { position: await getCurrent() });
   };
 
-  // Fired for many state changes; we only care about SEEK
   const onStateChange = async (e: YouTubeEvent<number>) => {
     if (applyingRemoteRef.current) return;
-    // Player state 1 = playing, 2 = paused, 3 = buffering, etc.
-    // We’ll treat manual scrubs as "seek" by comparing onMouseUp handlers or using this simple emit:
     const position = await getCurrent();
-    // Emit a seek on buffering (3) or unclassified changes; harmless if not actually a seek
     if (e.data === 3) {
       socket.emit("seek", { position });
     }
@@ -146,10 +146,10 @@ const App = () => {
   };
 
   const seekBy = async (sec: number) => {
-    if (!url || !videoId) {
+    if (!videoId) {
       toast.error("Please add a video url first");
     }
-    
+
     if (!playerRef.current) return;
     const current = await getCurrent();
     const pos = Math.max(0, current + sec);
@@ -188,8 +188,8 @@ const App = () => {
       </div>
 
       <div className="controls">
-        <button onClick={handlePlay}>▶ Play</button>
-        <button onClick={handlePause}>⏸ Pause</button>
+        <button disabled={isValidVideoId(videoId) && isPlaying} onClick={handlePlay}>▶ Play</button>
+        <button disabled={isValidVideoId(videoId) && !isPlaying} onClick={handlePause}>⏸ Pause</button>
         <button onClick={() => seekBy(-10)}>⏪ -10s</button>
         <button onClick={() => seekBy(10)}>⏩ +10s</button>
       </div>
@@ -203,7 +203,7 @@ const App = () => {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
+          theme="dark"
           transition={Bounce}
       />
     </div>

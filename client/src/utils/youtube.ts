@@ -1,4 +1,4 @@
-export function parseYouTubeId(input: string): string | null {
+export const parseYouTubeId = (input: string): string | null => {
 	try {
 		// Handle raw ID
 		if (/^[\w-]{11}$/.test(input)) return input;
@@ -18,4 +18,8 @@ export function parseYouTubeId(input: string): string | null {
 	} catch {
 		return null;
 	}
-}
+};
+
+export const isValidVideoId = (videoId: string | null): boolean => {
+	return videoId !== "" && videoId !== null;
+};

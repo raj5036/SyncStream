@@ -97,5 +97,5 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 server.listen(PORT, () => {
-	console.log("Server running on: ", PORT);
+	console.log("Server running on: ", PORT); 
 });
