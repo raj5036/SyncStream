@@ -4,7 +4,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import http from "http";
 import { ClientToServerEvents, ServerToClientEvents } from "./types/events.types";
-import { Server } from "socket.io";
+import { DisconnectReason, Server } from "socket.io";
 import { PlaybackState } from "./types/playback.types";
 
 const app = express();
@@ -19,6 +19,8 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
 		origin: "http://localhost:5173",
 		methods: ["GET", "POST"]
 	},
+	pingInterval: 5000,
+	pingTimeout: 5000.
 });
 
 // --- Global session (single room) ---
@@ -37,9 +39,8 @@ const effectivePosition = (s: PlaybackState) => {
 
 io.on("connection", (socket) => {
 	console.log("[SERVER] Client connected", socket.id);
-
-	const clientsCount: number = io.engine.clientsCount;
-	io.emit("userCounts", clientsCount);
+	
+	io.emit("userCounts", io.engine.clientsCount);
 
 	socket.emit("sync", {
 		...state,
@@ -95,7 +96,15 @@ io.on("connection", (socket) => {
 		// After change, send a fresh sync so late joiners get position 0
 		io.emit("sync", state);
 	});
+
+	socket.on("disconnect", (reason: DisconnectReason) => {
+		io.emit("userCounts", io.engine.clientsCount);
+
+		console.log("[SERVER] disconnected:", socket.id, "reason:", reason, "total:", io.engine.clientsCount);
+	});
 });
+
+// io.on("")
 
 app.get("/", (req: Request, res: Response) => {
 	res.send("Server is running");
