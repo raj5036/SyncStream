@@ -6,6 +6,7 @@ export type ServerToClientEvents = {
 	pause: (payload: PausePayload) => void;
 	seek: (payload: SeekPayload) => void;
 	changeVideo: (payload: ChangeVideoPayload) => void;
+	userCounts: (count: number) => void;
 };
 
 export type ClientToServerEvents = {

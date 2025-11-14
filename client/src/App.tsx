@@ -11,11 +11,17 @@ const App = () => {
   const [videoId, setVideoId] = useState<string | null>("");
   const [url, setUrl] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [connectedClients, setConnectedClients] = useState<number>(1);
 
   const playerRef = useRef<YouTubePlayer | null>(null);
   const applyingRemoteRef = useRef(false);
 
   useEffect(() => {
+    socket.on("userCounts", usersCount => {
+      console.log("[CLIENT] userCounts received:", usersCount);
+      setConnectedClients(usersCount);
+    });
+
     socket.on("sync", (s: PlaybackState) => {
       setVideoId(s.videoId);
 
@@ -83,6 +89,7 @@ const App = () => {
     socket.emit("requestSync");
 
     return () => {
+      socket.off("userCounts");
       socket.off("sync");
       socket.off("play");
       socket.off("pause");
@@ -160,6 +167,11 @@ const App = () => {
   return (
     <div className="app-container">
       <h1 className="title">Watch Party<span className="highlight"> • Global Session</span></h1>
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <span className="viewer-count">
+          🔴 {connectedClients} {connectedClients === 1 ? "person" : "people"} watching
+        </span>
+      </div>
 
       <div className="input-group">
         <input

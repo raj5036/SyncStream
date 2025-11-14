@@ -36,6 +36,11 @@ const effectivePosition = (s: PlaybackState) => {
 };
 
 io.on("connection", (socket) => {
+	console.log("[SERVER] Client connected", socket.id);
+
+	const clientsCount: number = io.engine.clientsCount;
+	io.emit("userCounts", clientsCount);
+
 	socket.emit("sync", {
 		...state,
 		position: effectivePosition(state)
