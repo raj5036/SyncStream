@@ -1,0 +1,8 @@
+{
+	"name": "watch-party",
+	"version": "1.0.0",
+	"scripts": {
+		"render-build": "./render-build.sh",
+		"start": "node server/dist/index.js"
+	}
+}
