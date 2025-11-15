@@ -6,21 +6,26 @@ import http from "http";
 import { ClientToServerEvents, ServerToClientEvents } from "./types/events.types";
 import { DisconnectReason, Server } from "socket.io";
 import { PlaybackState } from "./types/playback.types";
+import path from "path";
 
 const app = express();
 const PORT = process.env.PORT || "5000";
+const clientBuildPath = path.join(__dirname, "../../client/dist");
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static(clientBuildPath));
+app.get("/", (req: Request, res: Response) => {
+	res.send("Server is running");
+});
+app.get("/{*splat}", (_req, res) => {
+	res.sendFile(path.join(clientBuildPath, "index.html"));
+});
 
 const server = http.createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
-	cors: {
-		origin: "http://localhost:5173",
-		methods: ["GET", "POST"]
-	},
 	pingInterval: 5000,
-	pingTimeout: 5000.
+	pingTimeout: 5000,
 });
 
 // --- Global session (single room) ---
@@ -102,12 +107,6 @@ io.on("connection", (socket) => {
 
 		console.log("[SERVER] disconnected:", socket.id, "reason:", reason, "total:", io.engine.clientsCount);
 	});
-});
-
-// io.on("")
-
-app.get("/", (req: Request, res: Response) => {
-	res.send("Server is running");
 });
 
 server.listen(PORT, () => {

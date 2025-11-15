@@ -1,8 +1,8 @@
 {
-	"name": "watch-party",
-	"version": "1.0.0",
+	"name": "scenarix-watch-party",
+	"private": true,
 	"scripts": {
-		"render-build": "./render-build.sh",
-		"start": "node server/dist/index.js"
+		"build": "cd client && npm install && npm run build && cd ../server && npm install && npm run build",
+		"start": "cd server && npm start"
 	}
 }
