@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/config/socket.config.ts","./src/types/socket.d.ts","./src/types/youtube.d.ts","./src/utils/youtube.ts","./vite-env.d.ts"],"version":"5.9.3"}
