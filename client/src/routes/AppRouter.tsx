@@ -1,5 +1,4 @@
 import { Navigate, useRoutes } from "react-router-dom";
-import SignupPage from "../pages/SignupPage/SignupPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import { isAuthenticated } from "../utils/Auth";
@@ -13,11 +12,7 @@ export default function AppRouter() {
 				{
 					path: "login",
 					element: !isAuthenticated() ? <LoginPage /> : <Navigate to="/" replace />
-				},
-				{
-					path: "signup",
-					element: !isAuthenticated() ? <SignupPage /> : <Navigate to="/" replace />
-				},
+				}
 			]
 		},
 		// Protected route
