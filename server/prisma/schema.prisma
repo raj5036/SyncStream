@@ -13,39 +13,12 @@ datasource db {
   provider = "postgresql"
 }
 
-enum MessageType {
-  TEXT
-  SYSTEM
-}
-
-enum PlaybackStatus {
-  PLAYING
-  PAUSED
-  ENDED
-}
-
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String?
-  passwordHash String // bcrypt/argon2 hash
+  passwordHash String 
   avatarUrl    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-}
-
-model PlaybackState {
-  id              String          @id @default(cuid())
-  roomId          String          @unique
-  status          PlaybackStatus  @default(PAUSED)
-  positionSeconds Float           @default(0)   // canonical position in seconds
-  lastUpdatedAt   DateTime        @default(now())
-}
-
-model UserVideoHistory {
-  id              String    @id @default(cuid())
-  userId          String
-  videoUrl        String
-  lastPositionSec Float     @default(0)
-  lastWatchedAt   DateTime  @default(now())
 }
