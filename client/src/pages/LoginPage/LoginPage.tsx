@@ -8,7 +8,7 @@ const LoginPage = () => {
 
 	return (
 		<>
-			<h2>Some text</h2>
+			<h2>Join SyncStream Today!</h2>
 			<div
 				className={`container ${isRightActive ? "right-panel-active" : ""}`}
 				id="container"
