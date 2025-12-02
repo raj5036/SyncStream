@@ -20,7 +20,7 @@ export function validate(schema: any) {
 				errors: result.error.flatten().fieldErrors,
 			});
 		}
-		req.body = result.data; // cleaned + typed
+		req.body = result.data;
 		next();
 	};
 }
