@@ -7,6 +7,7 @@ import { ClientToServerEvents, ServerToClientEvents } from "./types/events.types
 import { DisconnectReason, Server } from "socket.io";
 import { PlaybackState } from "./types/playback.types";
 import path from "path";
+import ApiRouter from "./routes/index.routes";
 
 const app = express();
 const PORT = process.env.PORT || "5000";
@@ -21,6 +22,7 @@ app.get("/", (req: Request, res: Response) => {
 app.get("/{*splat}", (_req, res) => {
 	res.sendFile(path.join(clientBuildPath, "index.html"));
 });
+app.use("/api", ApiRouter);
 
 const server = http.createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
